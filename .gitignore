@@ -1,4 +1,12 @@
+# macOS
 .DS_Store
+
+# Python
 __pycache__
 *.pyc
+
+# Environement variables
 .env
+
+# The .dev directory is intended for individual development purposes (e.g. unused code, notes, etc.)
+.dev
