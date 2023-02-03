@@ -63,4 +63,4 @@ for [turns]: once for each turn >
 ```
 
 -   `for` indicates a loop.
--   `[turns]:` provides context to the AI generation. In general, providing comma-separated symbol names in the square brackets before a `:` declaration indicates that those symbols should be used in the generated code. In this case, we indicate that the AI should refer to the variable `turns` in the generated code.
+-   `[turns]:` provides context to the AI generation. In general, providing comma-separated symbol names in the square brackets before a `:` declaration indicates that those symbols should be used in the generated code. In this case, we indicate that the AI should refer to the variable `turns` in the generated code. The content of the previous code should also be included (in some form; not sure how yet) as context for the AI so that explicitly providing this information is not always necessary.
