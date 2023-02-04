@@ -1,4 +1,4 @@
-from .grammar_parser import (
+from codex.parser.grammar_parser import (
     CompoundExpression,
     ExprComponent,
     Repeated,

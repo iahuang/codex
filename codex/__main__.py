@@ -1,11 +1,4 @@
-import sys
-from codex.parser import parse
+from codex.cli import run_cli
 
-if len(sys.argv) < 2:
-    print("Usage: python -m codex <file>")
-    sys.exit(1)
-
-with open(sys.argv[1]) as fl:
-    source = fl.read()
-
-print(parse(source))
+if __name__ == "__main__":
+    run_cli()

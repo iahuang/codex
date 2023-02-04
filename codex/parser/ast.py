@@ -10,12 +10,14 @@ class ASTNode:
 
 class AIGenerative(ASTNode):
     given: list[SymbolName]
+    prompt: str
 
-    def __init__(self, given: list[SymbolName] = []) -> None:
+    def __init__(self, prompt: str, given: list[SymbolName] = []) -> None:
+        self.prompt = prompt
         self.given = given
 
 
-class ActionStatement(AIGenerative):
+class ActionStatementNode(AIGenerative):
     pass
 
 

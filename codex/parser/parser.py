@@ -1,13 +1,15 @@
 from typing import NoReturn, Optional
 
-from .errors import CodexSyntaxError
-from .source import CodexSource
-from .ast import Module, ASTNode
-from .grammar_parser import MatchResult, identify_string, ExpressionMatchError
-from .grammars import ActionStatement
+from codex.parser.errors import CodexSyntaxError
+from codex.parser.grammars import ActionStatement
+from codex.parser.source import CodexSource
+from codex.parser.ast import Module, ASTNode, ActionStatementNode
+from codex.parser.grammar_parser import MatchResult, identify_string, ExpressionMatchError
+
 
 # Measured in spaces OR tabs
 IndentationLevel = int
+
 
 def get_parameter_symbols(parameter_match: MatchResult) -> list[str]:
     """
@@ -24,10 +26,8 @@ def get_parameter_symbols(parameter_match: MatchResult) -> list[str]:
 
     if non_last := parameter_match.get_named_group_optional("non_last_parameters"):
         for param in non_last.indexed_groups:
-            non_last_symbol_names.append(
-                param.get_named_group("symbol_name").matched_string
-            )
-    
+            non_last_symbol_names.append(param.get_named_group("symbol_name").matched_string)
+
     return non_last_symbol_names + [last_symbol_name]
 
 
@@ -49,9 +49,9 @@ class Parser:
     source: CodexSource
     current_line_idx: int
 
-    def __init__(self, source: str) -> None:
-        self.source = CodexSource(source)
+    def __init__(self, source: CodexSource) -> None:
         self.current_line_idx = 0
+        self.source = source
 
     def get_current_line(self) -> str:
         """
@@ -139,10 +139,14 @@ class Parser:
 
                 # check if the action statement provided parameters
 
+                parameter_symbols: list[str] = []
+
                 if parameter_match := statement_match.get_named_group_optional("parameters"):
                     parameter_symbols = get_parameter_symbols(parameter_match)
-                
-                quit()
+
+                node = ActionStatementNode(statement_text, parameter_symbols)
+
+                return node, indentation
 
         except ExpressionMatchError as e:
             self.raise_syntax_error_at_current_line(e.message)
@@ -165,6 +169,8 @@ class Parser:
 
             if parse_result is not None:
                 module.children.append(parse_result[0])
+            
+            self.next_line()
 
         return module
 
