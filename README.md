@@ -31,5 +31,11 @@ For example, here is an example of a program that prints the first 10 Fibonacci 
 
 ## Getting Started
 
-1. Install dependencies using `pip install -r requirements.txt`.
-2. Run the Codex compiler using `python -m codex [input-file]`. Use `python -m codex --help` for more information.
+1. In order to use Codex, you will need to [sign up for an OpenAI API key](https://platform.openai.com/account/api-keys). As of writing, the OpenAI code generation endpoint used by the compiler is free to use, but you still may need to provide a payment method to sign up for an API key. Once you have obtained an API key,
+2. Install dependencies using `pip install -r requirements.txt`.
+3. Run the Codex compiler using `python -m codex [input-file]`. Use `python -m codex --help` for more information.
+
+
+## Installation
+
+Codex can also be installed to `/usr/local/bin` on Unix systems using `python3 install.py`. Keep in mind that this will overwrite any existing Codex installation, and the executable will be linked to wherever this repository is located on your system. This script will not automatically install dependencies, so you will need to run `pip install -r requirements.txt` before running the installation script.
