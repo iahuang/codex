@@ -26,7 +26,7 @@ The `!:` syntax is analogous to a regular code comment whose content will corres
 For example, here is an example of a program that prints the first 10 Fibonacci numbers:
 
 ```rust
-!: print the first 10 fibonacci numbers, and store them in an array called fibs
+!: print the first 10 fibonacci numbers
 ```
 
 ## Getting Started
