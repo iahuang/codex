@@ -12,7 +12,7 @@ SYMBOL_NAME = Regex(r"\w+")
 SQ_BRACKET_OPEN = Literal("[")
 SQ_BRACKET_CLOSE = Literal("]")
 EXCLAMATION_MARK = Literal("!")
-NON_EMPTY_TEXT = Regex(r".+\S.+").with_name("non empty text")
+NON_EMPTY_TEXT = Regex(r".{0,}\S.{0,}").with_name("non-empty text")
 
 COMMA = Literal(",")
 

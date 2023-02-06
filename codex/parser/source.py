@@ -1,4 +1,5 @@
 from __future__ import annotations
+import os
 from typing import Optional
 from pathlib import Path
 
@@ -6,9 +7,9 @@ from pathlib import Path
 class CodexSource:
     _content: str
     _lines: list[str]
-    _path: Optional[Path]
+    _path: Optional[str]
 
-    def __init__(self, from_string: str, path: Optional[Path]) -> None:
+    def __init__(self, from_string: str, path: Optional[str]) -> None:
         """
         Not intended to be called directly. Use `CodexSource.from_file` or `CodexSource.from_string`
         instead.
@@ -38,24 +39,18 @@ class CodexSource:
         """
 
         with open(path, "r") as f:
-            return CodexSource(f.read(), Path(path))
+            return CodexSource(f.read(), path)
 
-    def get_path(self) -> Optional[Path]:
-        """
-        Return the path to the source file, if any.
-        """
 
-        return self._path
-
-    def get_filename(self) -> str:
+    def get_name(self) -> str:
         """
-        Return the filename of the source file, and `<anonymous>` if the source is not from a file.
+        Return the full filename of the source file, and `<anonymous>` if the source is not from a file.
         """
 
         if self._path is None:
             return "<anonymous>"
 
-        return self._path.name
+        return os.path.abspath(self._path)
 
     def get_line_by_index(self, index: int) -> str:
         """

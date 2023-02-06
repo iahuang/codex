@@ -4,12 +4,14 @@ from codex.parser.errors import CodexSyntaxError
 from codex.util.strings import StringBuilder
 from codex.compiler.languages import get_language_context
 
+
 def red(text: str) -> str:
     """
     Return the given text in red.
     """
 
     return f"{Fore.RED}{Style.BRIGHT}{text}{Style.RESET_ALL}"
+
 
 def green(text: str) -> str:
     """
@@ -18,12 +20,14 @@ def green(text: str) -> str:
 
     return f"{Fore.GREEN}{Style.BRIGHT}{text}{Style.RESET_ALL}"
 
+
 def yellow(text: str) -> str:
     """
     Return the given text in yellow.
     """
 
     return f"{Fore.YELLOW}{Style.BRIGHT}{text}{Style.RESET_ALL}"
+
 
 def blue(text: str) -> str:
     """
@@ -32,12 +36,22 @@ def blue(text: str) -> str:
 
     return f"{Fore.BLUE}{Style.BRIGHT}{text}{Style.RESET_ALL}"
 
+
+def dim(text: str) -> str:
+    """
+    Return the given text in dim.
+    """
+
+    return f"{Style.DIM}{text}{Style.RESET_ALL}"
+
+
 def format_compilerconfigerror(error: CompilerConfigError) -> str:
     """
     Format the given CompilerConfigError as a colored string.
     """
 
     return f"{red('configuration error:')} {error.message}"
+
 
 def format_simple_error(error: str) -> str:
     """
@@ -46,15 +60,22 @@ def format_simple_error(error: str) -> str:
 
     return f"{red('error:')} {error}"
 
+
 def format_syntaxerror(error: CodexSyntaxError) -> str:
     """
     Format the given CodexSyntaxError as a colored string.
     """
 
     s = StringBuilder()
-    s.writeln(f"{red('error:')} {error.message}")
+    s.writeln(f"at {blue(error.source.get_name())}, line {error.line_no}")
+
+    # preview the line where the error occurred
+    s.writeln(f"{dim(str(error.line_no)+ '| '+error.source.get_line_by_number(error.line_no))}")
+
+    s.writeln(f"{red('syntax error:')} {error.message}")
 
     return s.get_data()
+
 
 def format_language_list(languages: list[str]) -> str:
     """
@@ -69,4 +90,3 @@ def format_language_list(languages: list[str]) -> str:
         s.writeln(f"  {blue(language)} - {lang.language_display_name}")
 
     return s.get_data()
-

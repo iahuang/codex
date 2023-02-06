@@ -3,11 +3,13 @@ from sys import stderr
 from pathlib import Path
 from typing import Optional
 from codex.parser import parse
+from codex.parser.errors import CodexSyntaxError
 from codex.parser.source import CodexSource
 from codex.compiler import CompilerConfig, CompilerConfigError, Compiler
 from codex.compiler.languages import get_all_languages
 from codex.cli.formatting import (
     format_compilerconfigerror,
+    format_syntaxerror,
     format_language_list,
     format_simple_error,
 )
@@ -29,8 +31,7 @@ def get_arg_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("-o", "--output", type=str, help="The output file to write to")
     parser.add_argument(
-        "-l",
-        "--language",
+        "--target",
         type=str,
         help="The language to compile to (default: python3)",
         default="python3",
@@ -71,7 +72,7 @@ def args_as_compiler_config(args: argparse.Namespace) -> CompilerConfig:
         output_path = Path(args.filename).name.split(".")[0]
 
     return CompilerConfig(
-        language_name=args.language,
+        language_name=args.target,
         output_path=output_path,
         openai_key=openai_key,
     )
@@ -112,3 +113,5 @@ def run_cli() -> None:
         compiler.compile()
     except CompilerConfigError as e:
         stderr_print(format_compilerconfigerror(e))
+    except CodexSyntaxError as e:
+        stderr_print(format_syntaxerror(e))
