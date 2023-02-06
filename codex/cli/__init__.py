@@ -6,7 +6,11 @@ from codex.parser import parse
 from codex.parser.source import CodexSource
 from codex.compiler import CompilerConfig, CompilerConfigError, Compiler
 from codex.compiler.languages import get_all_languages
-from codex.cli.formatting import format_compilerconfigerror, format_language_list, format_simple_error
+from codex.cli.formatting import (
+    format_compilerconfigerror,
+    format_language_list,
+    format_simple_error,
+)
 from dotenv import dotenv_values
 
 
@@ -25,11 +29,24 @@ def get_arg_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("-o", "--output", type=str, help="The output file to write to")
     parser.add_argument(
-        "-l", "--language", type=str, help="The language to compile to", default="python3"
+        "-l",
+        "--language",
+        type=str,
+        help="The language to compile to (default: python3)",
+        default="python3",
     )
-    parser.add_argument("-e", "--env", type=str, help="Path to the .env file", default=".env")
+    parser.add_argument(
+        "-e", "--env", type=str, help="Path to an alternate .env file", default=".env"
+    )
     parser.add_argument(
         "--list-languages", action="store_true", help="List all supported target languages"
+    )
+    parser.add_argument(
+        "-t",
+        "--temperature",
+        type=float,
+        help="The temperature to use for code generation. A number closer to zero produces less interesting, but more reliable output. (default: 0.05)",
+        default=0.05,
     )
 
     return parser
@@ -50,6 +67,7 @@ def args_as_compiler_config(args: argparse.Namespace) -> CompilerConfig:
     output_path: str = args.output
 
     if not args.output:
+        # if no output path is specified, use the name of the input file
         output_path = Path(args.filename).name.split(".")[0]
 
     return CompilerConfig(
@@ -80,7 +98,7 @@ def run_cli() -> None:
         print(format_language_list(get_all_languages()))
         print()
         return
-    
+
     if not args.filename:
         stderr_print(format_simple_error("No input file specified. Use -h for help."))
         return

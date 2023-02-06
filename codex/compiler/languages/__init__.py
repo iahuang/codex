@@ -1,8 +1,12 @@
 from codex.compiler.language_context import BaseLanguageContext
 from codex.compiler.languages.python import PythonLanguageContext
+from codex.compiler.languages.typescript import TypescriptLanguageContext
 
 
-LANGUAGE_REGISTRY: list[BaseLanguageContext] = [PythonLanguageContext()]
+LANGUAGE_REGISTRY: list[BaseLanguageContext] = [
+    PythonLanguageContext(),
+    TypescriptLanguageContext(),
+]
 
 
 def get_language_context(language_name: str) -> BaseLanguageContext:
@@ -17,6 +21,7 @@ def get_language_context(language_name: str) -> BaseLanguageContext:
 
     raise ValueError(f"Language {language_name} is not supported")
 
+
 def is_language_supported(language_name: str) -> bool:
     """
     Check if a language is supported, i.e. if a language context exists for it.
@@ -25,8 +30,9 @@ def is_language_supported(language_name: str) -> bool:
     for language in LANGUAGE_REGISTRY:
         if language.language_name.lower() == language_name.lower():
             return True
-    
+
     return False
+
 
 def get_all_languages() -> list[str]:
     """

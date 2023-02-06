@@ -9,18 +9,27 @@ Codex is a concept programing language powered by the OpenAI generative model of
 Codex is a programming language with minimal syntax where the behavior of the program is not explicitly defined. Instead, the behavior of Codex programs are described using plain English, and the actual implementation of the code is filled in by [OpenAI Codex](https://openai.com/blog/openai-codex/), a generative model designed to produce code from natural language descriptions.
 
 The Codex compiler takes a program and uses OpenAI Codex to implement it, outputting the source code for a standalone program in any one of the following languages:
- - Python
- - Java (not yet supported)
- - Javascript (not yet supported)
- - Typescript (not yet supported)
 
-Below is an example of a Codex program that adds two numbers.
+-   Python
+-   Typescript
+-   Java (not yet supported)
+-   Javascript (not yet supported)
+
+Below is an example of Hello World in Codex:
+
 ```rust
-fn add(int a, int b) -> int: return the sum of a and b
-
-fn main() >
-    var int a: a random number from 1 to 10
-    var int b: a random number from 1 to 10
-
-    ![add]: add a and b, and print the result
+!: print hello world
 ```
+
+The `!:` syntax is analogous to a regular code comment whose content will correspond to AI-generated code.
+
+For example, here is an example of a program that prints the first 10 Fibonacci numbers:
+
+```rust
+!: print the first 10 fibonacci numbers, and store them in an array called fibs
+```
+
+## Getting Started
+
+1. Install dependencies using `pip install -r requirements.txt`.
+2. Run the Codex compiler using `python -m codex [input-file]`. Use `python -m codex --help` for more information.

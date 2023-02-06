@@ -15,3 +15,16 @@ class StringBuilder:
             return self._data.rstrip()
         else:
             return self._data
+
+
+def indented(code: str, indentation_spaces: int = 4) -> str:
+    """
+    Indents the given code by the given number of spaces.
+
+    Example:
+    ```
+    print(indented("a\\nb\\nc", 2)) # prints "  a\\n  b\\n  c"
+    ```
+    """
+
+    return "\n".join(" " * indentation_spaces + line for line in code.split("\n"))

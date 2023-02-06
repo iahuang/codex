@@ -1,7 +1,7 @@
 from colorama import Fore, Style
 from codex.compiler import CompilerConfigError
 from codex.parser.errors import CodexSyntaxError
-from codex.util import StringBuilder
+from codex.util.strings import StringBuilder
 from codex.compiler.languages import get_language_context
 
 def red(text: str) -> str:

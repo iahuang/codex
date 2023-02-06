@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from codex.compiler.language_context import BaseLanguageContext
 from codex.parser.ast import ActionStatementNode
-from codex.util import StringBuilder
+from codex.util.strings import StringBuilder
 
 @dataclass
 class InsertPrompt:
