@@ -1,0 +1,6 @@
+using linalg
+
+var A: a randomly populated 3x3 matrix
+var float det: the determinant of A
+
+!: print det

@@ -29,6 +29,11 @@ class CompilerConfig:
     Temperature for OpenAI Codex. Must be between 0.0 and 1.0.
     """
 
+    verbose: bool = False
+    """
+    Whether to print verbose output.
+    """
+
 
 def validate_config(config: CompilerConfig) -> None:
     """

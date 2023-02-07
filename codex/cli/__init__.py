@@ -1,4 +1,6 @@
 import argparse
+import os
+
 from sys import stderr
 from pathlib import Path
 from typing import Optional
@@ -35,7 +37,12 @@ def get_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "filename", type=str, help="The source file to compile", nargs="?", default=None
     )
-    parser.add_argument("-o", "--output", type=str, help="The output file to write to")
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=str,
+        help="The output file to write to, or the destination directory if the path given to -o is a directory.",
+    )
     parser.add_argument(
         "--target",
         type=str,
@@ -54,6 +61,13 @@ def get_arg_parser() -> argparse.ArgumentParser:
         type=float,
         help="The temperature to use for code generation. A number closer to zero produces less interesting, but more reliable output. (default: 0.05)",
         default=0.05,
+    )
+
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Print verbose output to the console",
     )
 
     return parser
@@ -80,6 +94,8 @@ def args_as_compiler_config(args: argparse.Namespace) -> CompilerConfig:
     return CompilerConfig(
         target_language_name=args.target,
         openai_key=openai_key,
+        temperature=args.temperature,
+        verbose=args.verbose,
     )
 
 
@@ -119,9 +135,18 @@ def run_cli() -> None:
         compiler = Compiler(module, config)
         compiler.compile()
 
-        output_path = args.filename
+        output_path = args.output
 
-        # ensure that the output path has a file extension, if not, add one based on the target language
+        # if the output file is a directory, use the name of the input file
+        # appended to the directory, minus the extension
+        if os.path.isdir(output_path):
+            output_path = os.path.join(output_path, Path(args.filename).name.split(".")[0])
+
+        # if no output path is specified, use the name of the input file
+        if not output_path:
+            output_path = Path(args.filename).name.split(".")[0]
+
+        # if the output file lacks an extension, add the extension of the target language
         if not Path(output_path).suffix:
             output_path += "." + compiler.target.info.source_file_extension
 

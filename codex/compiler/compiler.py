@@ -23,6 +23,7 @@ from codex.lang.types import (
     TYPE_STRING,
     TYPE_UNKNOWN,
     Type,
+    Unknown,
 )
 
 from codex.compiler.language_binding import LanguageBinding
@@ -205,7 +206,7 @@ class Compiler:
         self._program.writeln(self._generate_snippet(snippet))
 
     def _compile_variable_declaration(self, node: VariableDeclarationNode) -> None:
-        type = self._resolve_type(node.type)
+        type = self._resolve_type(node.type) if node.type is not None else Unknown
 
         if type is None:
             self._errors.append(CompilerError(f"Unknown type '{node.type}'", node))
@@ -246,7 +247,10 @@ class Compiler:
 
     def compile(self) -> None:
         """
-        This method does not return anything.
+        This method does not return anything. Use `get_errors()` and `get_warnings()` to retrieve
+        compilation errors and warnings. Use `get_output()` to retrieve the compiled program.
+
+        This method should only be called once per Compiler instance.
         """
 
         # include modules that are included by default

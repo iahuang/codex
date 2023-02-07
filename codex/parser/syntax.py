@@ -2,6 +2,7 @@
 Syntax grammar definitions for the Codex language.
 """
 
+from typing import Optional
 from codex.parser.ast import PromptData
 from codex.parser.grammar import (
     CompoundExpression,
@@ -126,8 +127,13 @@ VariableDeclaration = CompoundExpression(
     [
         ExprComponent(Literal("var")),
         COMPONENT_REQ_WHITESPACE,
-        ExprComponent(SYMBOL_NAME, group_name="type_name"),
-        COMPONENT_REQ_WHITESPACE,
+        ExprComponent(
+            CompoundExpression(
+                [ExprComponent(SYMBOL_NAME, group_name="type_name"), COMPONENT_REQ_WHITESPACE]
+            ),
+            group_name="type",
+            optional=True,
+        ),
         ExprComponent(SYMBOL_NAME, group_name="variable_name"),
         COMPONENT_OPT_WHITESPACE,
         COMPONENT_PROMPT,
@@ -136,7 +142,7 @@ VariableDeclaration = CompoundExpression(
 """
 Syntax:
 ```
-var <type_name> <variable_name> [<parameter_name>, ...]: <prompt_text>
+var <type_name?> <variable_name> [<parameter_name>, ...]: <prompt_text>
 ```
 """
 
@@ -149,6 +155,23 @@ UsingDirective = CompoundExpression(
 )
 
 ### Helper functions ###
+
+
+def extract_variable_decl_info(match: MatchResult) -> tuple[str, Optional[str]]:
+    """
+    Extract the variable name and optional type name from the given variable match,
+    as returned from `VariableDeclaration`.
+
+    Return a tuple of the variable name and the type name, or `None` if no type.
+    """
+
+    variable_name = match.get_named_group("variable_name").matched_string
+
+    type_name = None
+    if type_match := match.get_named_group_optional("type"):
+        type_name = type_match.get_named_group("type_name").matched_string
+
+    return variable_name, type_name
 
 
 def get_parameter_names(parameter_match: MatchResult) -> list[str]:

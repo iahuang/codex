@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Optional
 from codex.parser.source import CodexSource
 
 SymbolName = str
@@ -45,13 +46,13 @@ class ActionStatementNode(PromptNode):
 
 class VariableDeclarationNode(PromptNode):
     variable_name: SymbolName
-    type: str
+    type: Optional[str]
 
     def __init__(
         self,
         location: Location,
         name: SymbolName,
-        type: str,
+        type: Optional[str],
         prompt: PromptData,
     ) -> None:
         super().__init__(location, prompt)

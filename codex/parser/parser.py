@@ -9,6 +9,7 @@ from codex.parser.syntax import (
     extract_prompt,
     extract_module_name,
     GROUP_PROMPT,
+    extract_variable_decl_info,
 )
 from codex.parser.source import CodexSource
 from codex.parser.ast import (
@@ -143,8 +144,7 @@ class Parser:
                 return node, indentation
 
             if identified_expr == VariableDeclaration:
-                variable_name = match.get_named_group("variable_name").matched_string
-                type_name = match.get_named_group("type_name").matched_string
+                variable_name, type_name = extract_variable_decl_info(match)
                 prompt = extract_prompt(match.get_named_group(GROUP_PROMPT))
 
                 node = VariableDeclarationNode(location, variable_name, type_name, prompt)
