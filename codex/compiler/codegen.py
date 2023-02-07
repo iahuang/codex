@@ -174,7 +174,7 @@ class Codegen:
         # "// the sum of a and b
         # int a = "
         prompt = CompletionPrompt(
-            prompt=variable_description + "\n" + stub,
+            prompt="Create a variable containing " + variable_description + "\n" + stub,
         )
         prompt.set_stop_sequences(["\n\n"])
 
@@ -185,6 +185,40 @@ class Codegen:
         template.writeln(self.language.generate_single_line_comment(variable_prompt))
         # add variable declaration
         template.writeln(self.language.generate_variable_assignment(name, type, GENERATED))
+
+        return SnippetBlueprint(
+            codex_prompt=self.build_contextualized_prompt(prompt),
+            generation_template=template.to_string(),
+        )
+
+    def generate_prompted_function_decl(
+        self,
+        function_name: str,
+        return_type: Optional[Type],
+        arguments: list[tuple[str, Optional[Type]]],
+        implementation_prompt: str,
+    ) -> SnippetBlueprint:
+
+        # e.g. "def f(a: int, b: int) -> int:"
+        fn_body = "\n".join(
+            [self.language.generate_multi_line_comment(implementation_prompt), GENERATED]
+        )
+
+        stub = self.language.generate_function_declaration(
+            function_name, return_type, arguments, fn_body
+        )
+        prompt = InsertionPrompt(
+            prefix=stub.split(GENERATED)[0],
+            suffix=stub.split(GENERATED)[1],
+        )
+        prompt.set_stop_sequences(["\n\n"])
+
+        template = StringBuilder()
+        template.writeln(
+            self.language.generate_function_declaration(
+                function_name, return_type, arguments, GENERATED
+            )
+        )
 
         return SnippetBlueprint(
             codex_prompt=self.build_contextualized_prompt(prompt),

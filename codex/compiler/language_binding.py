@@ -192,3 +192,23 @@ class LanguageBinding:
         """
 
         raise NotImplementedError
+
+    def generate_function_declaration(
+        self,
+        name: str,
+        return_type: Optional[Type],
+        params: list[tuple[str, Optional[Type]]],
+        body: str,
+    ) -> str:
+        """
+        Return a language-specific function declaration for the given name, return type, parameters,
+        and body.
+
+        Example:
+        ```
+        cpp = LanguageBinding(...)
+        cpp.generate_function_declaration("main", None, [], "return 0;") # "int main() { return 0; }"
+        ```
+        """
+
+        raise NotImplementedError

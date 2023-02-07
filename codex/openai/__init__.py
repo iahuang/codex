@@ -57,7 +57,7 @@ class OpenAI:
             "model": CODEX_MODEL,
             "max_tokens": max_tokens,
             "temperature": temperature,
-            "stop": prompt.stop_sequences,
+            "stop": prompt.stop_sequences or None,
         }
 
         if isinstance(prompt, InsertionPrompt):

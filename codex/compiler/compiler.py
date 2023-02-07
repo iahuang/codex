@@ -6,6 +6,7 @@ from codex.parser.ast import (
     ASTNode,
     Module,
     PromptNode,
+    PromptedFunctionDeclarationNode,
     UsingDirectiveNode,
     ActionStatementNode,
     VariableDeclarationNode,
@@ -196,7 +197,7 @@ class Compiler:
 
     def _resolve_type(self, type_name: str) -> Optional[Type]:
         """
-        Given a type expression such as "int" or "array", return a corresponding Type object.
+        Given a type name such as "int" or "array", return a corresponding Type object.
 
         Return None if the type expression is invalid or no corresponding type exists.
         """
@@ -230,6 +231,36 @@ class Compiler:
             name=node.variable_name,
             type=type,
             variable_prompt=node.prompt.prompt,
+        )
+        self._program.writeln(self._generate_snippet(snippet))
+
+    def _compile_prompted_function(self, node: PromptedFunctionDeclarationNode) -> None:
+        self._set_codegen_context()
+
+        return_type = self._resolve_type(node.return_type) if node.return_type else None
+
+        if return_type is None:
+            self._errors.append(CompilerError(f"Unknown return type '{node.return_type}'", node))
+            return
+
+        arguments: list[tuple[str, Optional[Type]]] = []
+
+        for argument in node.arguments:
+            arg_name, type_string = argument
+
+            arg_type = self._resolve_type(type_string) if type_string else None
+
+            if arg_type is None:
+                self._errors.append(CompilerError(f"Unknown argument type '{type_string}'", node))
+                return
+
+            arguments.append((arg_name, arg_type))
+
+        snippet = self._codegen.generate_prompted_function_decl(
+            function_name=node.function_name,
+            return_type=return_type,
+            arguments=arguments,
+            implementation_prompt=node.prompt.prompt,
         )
         self._program.writeln(self._generate_snippet(snippet))
 
@@ -282,6 +313,11 @@ class Compiler:
                 self._check_prompt_for_unincluded_modules(node)
 
                 self._compile_variable_declaration(node)
+            elif isinstance(node, PromptedFunctionDeclarationNode):
+                self._check_prompt_for_unincluded_modules(node)
+
+                self._compile_prompted_function(node)
+
             else:
                 raise NotImplementedError(f"Cannot compile node of type {type(node).__name__}")
 

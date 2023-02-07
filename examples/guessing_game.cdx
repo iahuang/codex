@@ -1,0 +1,11 @@
+using json
+using random
+
+var int turns: the value of the field "turns" as read from a file called "config.json"
+
+var int correct_number: a random number between 1 and 100
+!: ensure that turns is an integer
+
+fn int prompt_user(string prompt): ask the user for a random number between 1 and 100
+
+!: for as many turns as the user has, ask them for a number. If they get it right, tell them they won. If they get it wrong, tell them if they were too high or too low. If they run out of turns, tell them they lost.

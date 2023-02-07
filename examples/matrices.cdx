@@ -1,6 +1,6 @@
 using linalg
 
 var matrix A: a randomly populated 3x3 matrix
-var float det: the determinant of A
+fn float get_determinant(matrix A): return the determinant of A
 
-!: print det
+!: print the determinant of A

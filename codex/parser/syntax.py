@@ -22,6 +22,8 @@ WHITESPACE = Regex(r"\s+").with_name("whitespace")
 SYMBOL_NAME = Regex(r"\w+").with_name("symbol name")
 SQ_BRACKET_OPEN = Literal("[")
 SQ_BRACKET_CLOSE = Literal("]")
+L_PAREN = Literal("(")
+R_PAREN = Literal(")")
 EXCLAMATION_MARK = Literal("!")
 NON_EMPTY_TEXT = Regex(r".{0,}\S.{0,}").with_name("non-empty text")
 COMMA = Literal(",")
@@ -31,11 +33,23 @@ COMMA = Literal(",")
 GROUP_PROMPT = "prompt"
 GROUP_PROMPT_TEXT = "prompt_text"
 GROUP_PARAMETERS = "parameters"
+GROUP_TYPE_NAME = "type_name"
+GROUP_OPTIONAL_TYPE = "optional_type"
+GROUP_SYMBOL_NAME = "symbol_name"
 
 # component macros
 
 COMPONENT_OPT_WHITESPACE = ExprComponent(WHITESPACE, optional=True)
 COMPONENT_REQ_WHITESPACE = ExprComponent(WHITESPACE, optional=False)
+
+COMPONENT_OPT_TYPE = ExprComponent(
+    CompoundExpression(
+        [ExprComponent(SYMBOL_NAME, group_name=GROUP_TYPE_NAME), COMPONENT_REQ_WHITESPACE]
+    ),
+    group_name=GROUP_OPTIONAL_TYPE,
+    optional=True,
+)
+
 
 ### Expressions ###
 
@@ -127,14 +141,8 @@ VariableDeclaration = CompoundExpression(
     [
         ExprComponent(Literal("var")),
         COMPONENT_REQ_WHITESPACE,
-        ExprComponent(
-            CompoundExpression(
-                [ExprComponent(SYMBOL_NAME, group_name="type_name"), COMPONENT_REQ_WHITESPACE]
-            ),
-            group_name="type",
-            optional=True,
-        ),
-        ExprComponent(SYMBOL_NAME, group_name="variable_name"),
+        COMPONENT_OPT_TYPE,
+        ExprComponent(SYMBOL_NAME, group_name=GROUP_SYMBOL_NAME),
         COMPONENT_OPT_WHITESPACE,
         COMPONENT_PROMPT,
     ]
@@ -153,23 +161,108 @@ UsingDirective = CompoundExpression(
         ExprComponent(SYMBOL_NAME, group_name="module_name"),
     ]
 )
+"""
+Syntax:
+```
+using <module_name>
+```
+"""
+
+_FuncArgumentNonLast = CompoundExpression(
+    [
+        COMPONENT_OPT_WHITESPACE,
+        COMPONENT_OPT_TYPE,
+        ExprComponent(SYMBOL_NAME, group_name=GROUP_SYMBOL_NAME),
+        COMPONENT_OPT_WHITESPACE,
+        ExprComponent(COMMA),
+    ]
+)
+
+_FuncArgumentLast = CompoundExpression(
+    [
+        COMPONENT_OPT_WHITESPACE,
+        COMPONENT_OPT_TYPE,
+        ExprComponent(SYMBOL_NAME, group_name=GROUP_SYMBOL_NAME),
+        COMPONENT_OPT_WHITESPACE,
+    ]
+)
+
+_FuncSomeArguments = CompoundExpression(
+    [
+        ExprComponent(L_PAREN),
+        ExprComponent(Repeated(_FuncArgumentNonLast, min_count=0), group_name="non_last_arguments"),
+        ExprComponent(_FuncArgumentLast, group_name="last_argument"),
+        ExprComponent(R_PAREN),
+    ]
+)
+
+_FuncNoArguments = CompoundExpression(
+    [
+        ExprComponent(L_PAREN),
+        COMPONENT_OPT_WHITESPACE,
+        ExprComponent(R_PAREN),
+    ]
+)
+
+_FuncArguments = UnionExpression([_FuncSomeArguments, _FuncNoArguments])
+
+PromptedFunctionDeclaration = CompoundExpression(
+    [
+        ExprComponent(Literal("fn")),
+        COMPONENT_REQ_WHITESPACE,
+        COMPONENT_OPT_TYPE,
+        ExprComponent(SYMBOL_NAME, group_name=GROUP_SYMBOL_NAME),  # function name
+        COMPONENT_OPT_WHITESPACE,
+        ExprComponent(_FuncArguments, group_name="arguments"),
+        COMPONENT_OPT_WHITESPACE,
+        COMPONENT_PROMPT,
+    ]
+)
+"""
+Syntax:
+```
+fn <type_name?> <function_name>() <prompt>
+```
+"""
 
 ### Helper functions ###
 
 
-def extract_variable_decl_info(match: MatchResult) -> tuple[str, Optional[str]]:
+def extract_function_arguments(match: MatchResult) -> list[tuple[str, Optional[str]]]:
     """
-    Extract the variable name and optional type name from the given variable match,
-    as returned from `VariableDeclaration`.
+    Extract the argument names and optional type names from the given function match,
+    as returned from `_FuncArguments`.
+
+    Return a list of tuples of the argument name and the type name, or `None` if no type.
+    """
+
+    arguments = []
+
+    if non_last_arguments_match := match.get_named_group_optional("non_last_arguments"):
+        for argument_match in non_last_arguments_match.indexed_groups:
+            arguments.append(extract_symbol_decl_info(argument_match))
+
+    if last_argument_match := match.get_named_group("last_argument"):
+        arguments.append(extract_symbol_decl_info(last_argument_match))
+
+    return arguments
+
+
+def extract_symbol_decl_info(match: MatchResult) -> tuple[str, Optional[str]]:
+    """
+    Extract the symbol name and optional type name from a compound match object
+    containing group names `GROUP_SYMBOL_NAME` and component `OPT_TYPE`, for instance,
+    `VariableDeclaration` and `_FuncArgumentLast` matches.
 
     Return a tuple of the variable name and the type name, or `None` if no type.
     """
 
-    variable_name = match.get_named_group("variable_name").matched_string
+    variable_name = match.get_named_group(GROUP_SYMBOL_NAME).matched_string
 
     type_name = None
-    if type_match := match.get_named_group_optional("type"):
-        type_name = type_match.get_named_group("type_name").matched_string
+
+    if type_match := match.get_named_group_optional(GROUP_OPTIONAL_TYPE):
+        type_name = type_match.get_named_group(GROUP_TYPE_NAME).matched_string
 
     return variable_name, type_name
 

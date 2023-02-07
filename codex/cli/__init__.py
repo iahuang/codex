@@ -137,14 +137,14 @@ def run_cli() -> None:
 
         output_path = args.output
 
+        # if no output path is specified, use the name of the input file
+        if not output_path:
+            output_path = Path(args.filename).name.split(".")[0]
+
         # if the output file is a directory, use the name of the input file
         # appended to the directory, minus the extension
         if os.path.isdir(output_path):
             output_path = os.path.join(output_path, Path(args.filename).name.split(".")[0])
-
-        # if no output path is specified, use the name of the input file
-        if not output_path:
-            output_path = Path(args.filename).name.split(".")[0]
 
         # if the output file lacks an extension, add the extension of the target language
         if not Path(output_path).suffix:

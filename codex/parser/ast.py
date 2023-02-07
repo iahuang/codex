@@ -68,6 +68,26 @@ class UsingDirectiveNode(ASTNode):
         self.module_name = module_name
 
 
+class PromptedFunctionDeclarationNode(PromptNode):
+    function_name: str
+    arguments: list[tuple[str, Optional[str]]]
+    return_type: Optional[str]
+
+    def __init__(
+        self,
+        *args,
+        location: Location,
+        function_name: str,
+        return_type: Optional[str],
+        arguments: list[tuple[str, Optional[str]]],
+        prompt: PromptData,
+    ) -> None:
+        super().__init__(location, prompt)
+        self.function_name = function_name
+        self.arguments = arguments
+        self.return_type = return_type
+
+
 class CodeBlock(ASTNode):
     children: list[ASTNode]
 

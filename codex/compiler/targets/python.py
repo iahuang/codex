@@ -1,3 +1,4 @@
+from typing import Optional
 from codex.compiler.language_binding import (
     LanguageInfo,
     StandardLibraryBinding,
@@ -6,6 +7,7 @@ from codex.compiler.language_binding import (
 )
 from codex.lang.std import StandardLibrary, StdLibTypes
 from codex.lang.types import Type
+from codex.util.strings import indented
 
 info = LanguageInfo(
     display_name="Python 3",
@@ -52,3 +54,13 @@ class PythonLanguageBinding(LanguageBinding):
 
     def generate_variable_assignment(self, name: str, type: Type, value: str) -> str:
         return f"{name} = {value}"
+
+    def generate_function_declaration(
+        self,
+        name: str,
+        return_type: Optional[Type],
+        params: list[tuple[str, Optional[Type]]],
+        body: str,
+    ) -> str:
+        param_str = ", ".join(name for name, _ in params)
+        return f"def {name}({param_str}):\n{indented(body, 4)}"

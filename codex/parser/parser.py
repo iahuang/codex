@@ -4,12 +4,14 @@ from dataclasses import dataclass
 from codex.parser.errors import CodexSyntaxError
 from codex.parser.syntax import (
     ActionStatement,
+    PromptedFunctionDeclaration,
     UsingDirective,
     VariableDeclaration,
+    extract_function_arguments,
     extract_prompt,
     extract_module_name,
     GROUP_PROMPT,
-    extract_variable_decl_info,
+    extract_symbol_decl_info,
 )
 from codex.parser.source import CodexSource
 from codex.parser.ast import (
@@ -17,6 +19,7 @@ from codex.parser.ast import (
     Module,
     ASTNode,
     ActionStatementNode,
+    PromptedFunctionDeclarationNode,
     UsingDirectiveNode,
     VariableDeclarationNode,
 )
@@ -121,12 +124,13 @@ class Parser:
         # identify the statement type, raising an error if it could not be identified
 
         identified_expr = identify_string(
-            trimmed_line, [ActionStatement, VariableDeclaration, UsingDirective]
+            trimmed_line,
+            [ActionStatement, VariableDeclaration, UsingDirective, PromptedFunctionDeclaration],
         )
 
         if identified_expr is None:
             self.raise_syntax_error_at_current_line(
-                f"Unrecognized token {trimmed_line.split(' ')[0]!r}"
+                f"Unrecognized token or keyword {trimmed_line.split(' ')[0]!r}"
             )
 
         # parse the statement
@@ -144,7 +148,7 @@ class Parser:
                 return node, indentation
 
             if identified_expr == VariableDeclaration:
-                variable_name, type_name = extract_variable_decl_info(match)
+                variable_name, type_name = extract_symbol_decl_info(match)
                 prompt = extract_prompt(match.get_named_group(GROUP_PROMPT))
 
                 node = VariableDeclarationNode(location, variable_name, type_name, prompt)
@@ -155,6 +159,22 @@ class Parser:
                 module_name = extract_module_name(match)
 
                 return UsingDirectiveNode(location, module_name), indentation
+
+            if identified_expr == PromptedFunctionDeclaration:
+                prompt = extract_prompt(match.get_named_group(GROUP_PROMPT))
+                func_name, return_type = extract_symbol_decl_info(match)
+
+                arguments = extract_function_arguments(match.get_named_group("arguments"))
+
+                node = PromptedFunctionDeclarationNode(
+                    location=location,
+                    function_name=func_name,
+                    return_type=return_type,
+                    prompt=prompt,
+                    arguments=arguments,
+                )
+
+                return node, indentation
 
         except ExpressionMatchError as e:
             self.raise_syntax_error_at_current_line(e.message)
