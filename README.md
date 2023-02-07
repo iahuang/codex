@@ -45,6 +45,17 @@ The `using` keyword is used to import Codex standard library modules. In this ex
 
 Even though the output of the Codex compiler is largely AI-generated, the `using` directive helps to ensure that the output is valid code.
 
+In the previous example, the Codex compiler output with the target language set to Python was as follows:
+
+```python
+# the first 10 fibonacci numbers
+fibs = [1, 1, 2, 3, 5, 8, 13, 21, 34, 55]
+
+# write fibs to fibs.txt as a comma-separated list
+with open('fibs.txt', 'w') as f:
+    f.write(','.join(str(fib) for fib in fibs))
+```
+
 ## Getting Started
 
 1. In order to use Codex, you will need to [sign up for an OpenAI API key](https://platform.openai.com/account/api-keys). As of writing, the OpenAI code generation endpoint used by the compiler is free to use, but you still may need to provide a payment method to sign up for an API key. Once you have obtained an API key,

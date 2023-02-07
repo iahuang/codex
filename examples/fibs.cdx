@@ -1,0 +1,5 @@
+using fs
+
+var array fibs: the first 10 fibonacci numbers
+
+!: write fibs to fibs.txt as a comma-separated list
