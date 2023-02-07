@@ -1,6 +1,6 @@
 # Codex
 
-Codex is a concept programing language powered by the OpenAI generative model of the same name.
+Codex is a concept programing language powered by OpenAI's natural language model of the same name.
 
 ## Introduction
 
