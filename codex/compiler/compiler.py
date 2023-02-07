@@ -98,7 +98,7 @@ class Compiler:
 
         self._used_modules = set()
 
-    def _reify_snippet(self, snippet_generator: SnippetGenerator) -> str:
+    def _generate_snippet(self, snippet_generator: SnippetGenerator) -> str:
         """
         Given a snippet generator, generate a code snippet using the OpenAI Codex API.
         """
@@ -202,7 +202,7 @@ class Compiler:
     def _compile_action_statement(self, node: ActionStatementNode) -> None:
         self._set_codegen_context()
         snippet = self._codegen.generate_action(node.prompt.prompt)
-        self._program.writeln(self._reify_snippet(snippet))
+        self._program.writeln(self._generate_snippet(snippet))
 
     def _compile_variable_declaration(self, node: VariableDeclarationNode) -> None:
         type = self._resolve_type(node.type)
@@ -217,7 +217,7 @@ class Compiler:
             type=type,
             variable_prompt=node.prompt.prompt,
         )
-        self._program.writeln(self._reify_snippet(snippet))
+        self._program.writeln(self._generate_snippet(snippet))
 
     def _check_prompt_for_unincluded_modules(self, node: PromptNode) -> None:
         """
@@ -229,6 +229,9 @@ class Compiler:
 
         for module in get_all_standard_modules():
             if module.include_by_default:
+                continue
+
+            if module in self._used_modules:
                 continue
 
             for keyword in module.keywords:

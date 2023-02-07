@@ -19,12 +19,6 @@ class CompilerConfig:
     See codex.compiler.languages for a list of supported languages.
     """
 
-    output_path: str
-    """
-    Refers to a file into which the generated code will be written.
-    Should not include a file extension.
-    """
-
     openai_key: str
     """
     See https://beta.openai.com/docs/api-reference/authentication for more information.
@@ -41,10 +35,6 @@ def validate_config(config: CompilerConfig) -> None:
     Validate the given compiler configuration. Raise a CompilerConfigError if the configuration
     is invalid.
     """
-
-    # check that output path is not a directory
-    if os.path.exists(config.output_path) and os.path.isdir(config.output_path):
-        raise CompilerConfigError("Output file path already refers to a directory.")
 
     # verify that the language name is valid
     if not is_language_supported(config.target_language_name):

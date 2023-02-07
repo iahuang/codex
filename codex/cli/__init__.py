@@ -79,7 +79,6 @@ def args_as_compiler_config(args: argparse.Namespace) -> CompilerConfig:
 
     return CompilerConfig(
         target_language_name=args.target,
-        output_path=output_path,
         openai_key=openai_key,
     )
 
@@ -120,7 +119,7 @@ def run_cli() -> None:
         compiler = Compiler(module, config)
         compiler.compile()
 
-        output_path = config.output_path
+        output_path = args.filename
 
         # ensure that the output path has a file extension, if not, add one based on the target language
         if not Path(output_path).suffix:
