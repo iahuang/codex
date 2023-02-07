@@ -21,7 +21,7 @@ def ensure_trailing_newline(text: str) -> str:
 
 
 @dataclass
-class SnippetGenerator:
+class SnippetBlueprint:
     """
     Dataclass returned by Codegen methods.
 
@@ -132,7 +132,7 @@ class Codegen:
 
         raise ValueError(f"Unknown prompt type: {type(prompt)}")
 
-    def generate_action(self, action_prompt: str) -> SnippetGenerator:
+    def generate_action(self, action_prompt: str) -> SnippetBlueprint:
         """
         Example template output for a prompt such as "print the sum of a and b":
         ```
@@ -150,14 +150,14 @@ class Codegen:
         template.writeln(self.language.generate_single_line_comment(action_prompt))
         template.writeln(GENERATED)
 
-        return SnippetGenerator(
+        return SnippetBlueprint(
             codex_prompt=self.build_contextualized_prompt(prompt),
             generation_template=template.to_string(),
         )
 
     def generate_variable_decl(
-        self, name: str, type: Type, variable_prompt: str
-    ) -> SnippetGenerator:
+        self, name: str, type: Optional[Type], variable_prompt: str
+    ) -> SnippetBlueprint:
         """
         Example template output:
         ```
@@ -186,7 +186,7 @@ class Codegen:
         # add variable declaration
         template.writeln(self.language.generate_variable_assignment(name, type, GENERATED))
 
-        return SnippetGenerator(
+        return SnippetBlueprint(
             codex_prompt=self.build_contextualized_prompt(prompt),
             generation_template=template.to_string(),
         )

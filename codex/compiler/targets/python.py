@@ -4,7 +4,7 @@ from codex.compiler.language_binding import (
     LanguageBinding,
     ModuleBinding,
 )
-from codex.lang.std import StandardLibrary, StandardModule
+from codex.lang.std import StandardLibrary, StdLibTypes
 from codex.lang.types import Type
 
 info = LanguageInfo(
@@ -18,7 +18,13 @@ stdlib_binding = (
     .add_module_binding(ModuleBinding(StandardLibrary.Math, analogous_module="math"))
     .add_module_binding(ModuleBinding(StandardLibrary.JSON, analogous_module="json"))
     .add_module_binding(ModuleBinding(StandardLibrary.Random, analogous_module="random"))
-    .add_module_binding(ModuleBinding(StandardLibrary.Linalg, analogous_module="numpy"))
+    .add_module_binding(
+        ModuleBinding(
+            StandardLibrary.Linalg,
+            polyfill="import numpy as np",
+            type_bindings={StdLibTypes.Matrix: "np.ndarray"},
+        )
+    )
 )
 
 

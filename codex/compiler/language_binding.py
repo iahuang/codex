@@ -34,16 +34,23 @@ class ModuleBinding:
     of this module.
     """
 
+    type_bindings: dict[Type, str]
+    """
+    A mapping from Codex types to language-specific type expressions.
+    """
+
     def __init__(
         self,
         module: StandardModule,
         *args,
         analogous_module: Optional[str] = None,
-        polyfill: Optional[str] = None
+        polyfill: Optional[str] = None,
+        type_bindings: Optional[dict[Type, str]] = None,
     ) -> None:
         self.module = module
         self.analogous_module = analogous_module
         self.polyfill = polyfill
+        self.type_bindings = type_bindings or {}
 
 
 class StandardLibraryBinding:
@@ -121,7 +128,7 @@ class LanguageBinding:
 
         raise NotImplementedError
 
-    def generate_type_expr(self, type: Type) -> str:
+    def generate_type_expr(self, type: Optional[Type]) -> str:
         """
         Return a language-specific type expression for the given Codex type.
 
@@ -135,7 +142,7 @@ class LanguageBinding:
 
         raise NotImplementedError
 
-    def generate_incomplete_variable_assignment(self, name: str, type: Type) -> str:
+    def generate_incomplete_variable_assignment(self, name: str, type: Optional[Type]) -> str:
         """
         Return a language-specific incomplete variable assignment for the given name and type.
 
@@ -149,7 +156,7 @@ class LanguageBinding:
 
         raise NotImplementedError
 
-    def generate_variable_assignment(self, name: str, type: Type, value: str) -> str:
+    def generate_variable_assignment(self, name: str, type: Optional[Type], value: str) -> str:
         """
         Return a language-specific variable assignment for the given name, type, and value.
         ```

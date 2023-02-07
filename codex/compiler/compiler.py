@@ -1,5 +1,6 @@
 from typing import Optional
 import re
+from codex.lang.types import BASE_TYPES, Type
 
 from codex.parser.ast import (
     ASTNode,
@@ -14,22 +15,11 @@ from codex.util.strings import StringBuilder
 from codex.openai import OpenAI, DAVINCI_MAX_TOKENS
 
 from codex.lang.std import StandardModule, get_standard_module, get_all_standard_modules
-from codex.lang.types import (
-    TYPE_ARRAY,
-    TYPE_BOOL,
-    TYPE_FLOAT,
-    TYPE_INT,
-    TYPE_MAP,
-    TYPE_STRING,
-    TYPE_UNKNOWN,
-    Type,
-    Unknown,
-)
 
 from codex.compiler.language_binding import LanguageBinding
 from codex.compiler.targets import get_language_binding
 from codex.compiler.config import CompilerConfig
-from codex.compiler.codegen import GENERATED, Codegen, SnippetGenerator, CodegenContext
+from codex.compiler.codegen import GENERATED, Codegen, SnippetBlueprint, CodegenContext
 
 
 class CompilerError(Exception):
@@ -78,6 +68,11 @@ class Compiler:
 
     _used_modules: set[StandardModule]
 
+    _custom_types: dict[str, Type]
+    """
+    Registry of user-defined types or types included from standard modules.
+    """
+
     def __init__(self, module: Module, config: CompilerConfig) -> None:
         """
         This constructor does not validate the given module or configuration. The configuration
@@ -99,7 +94,9 @@ class Compiler:
 
         self._used_modules = set()
 
-    def _generate_snippet(self, snippet_generator: SnippetGenerator) -> str:
+        self._custom_types = {}
+
+    def _generate_snippet(self, snippet_generator: SnippetBlueprint) -> str:
         """
         Given a snippet generator, generate a code snippet using the OpenAI Codex API.
         """
@@ -136,7 +133,7 @@ class Compiler:
         # ensure that the module is not already imported
         if module in self._used_modules:
             self._warnings.append(
-                CompilerError(f"Module '{module.name}' is already imported", node)
+                CompilerError(f"Module '{module.name}' is already imported.", node)
             )
             return
 
@@ -165,6 +162,10 @@ class Compiler:
         if binding.polyfill is not None:
             self._header.writeln(binding.polyfill)
 
+        # add types
+        for type in module.module_types:
+            self._register_custom_type(type)
+
     def _set_codegen_context(self) -> None:
         """
         Add the program header and body as context for the code generator.
@@ -177,26 +178,35 @@ class Compiler:
 
         self._codegen.set_context(context)
 
+    def _register_custom_type(self, type: Type) -> None:
+        """
+        Register a custom type with the compiler.
+        """
+
+        # make sure type is not already registered
+        if type.name in self._custom_types:
+            raise ValueError(f"Type '{type.name}' is already registered")
+
+        # make sure type does not conflict with a base type
+        for base_type in BASE_TYPES:
+            if type.name == base_type.name:
+                raise ValueError(f"Type '{type.name}' conflicts with a base type of the same name")
+
+        self._custom_types[type.name] = type
+
     def _resolve_type(self, type_name: str) -> Optional[Type]:
         """
         Given a type expression such as "int" or "array", return a corresponding Type object.
 
-        Return None if the type expression is invalid.
+        Return None if the type expression is invalid or no corresponding type exists.
         """
-
-        BASE_TYPES = [
-            TYPE_UNKNOWN,
-            TYPE_BOOL,
-            TYPE_INT,
-            TYPE_FLOAT,
-            TYPE_STRING,
-            TYPE_ARRAY,
-            TYPE_MAP,
-        ]
 
         for base_type in BASE_TYPES:
             if type_name == base_type.name:
-                return Type(base_type)
+                return base_type
+
+        if type_name in self._custom_types:
+            return self._custom_types[type_name]
 
         return None
 
@@ -206,11 +216,14 @@ class Compiler:
         self._program.writeln(self._generate_snippet(snippet))
 
     def _compile_variable_declaration(self, node: VariableDeclarationNode) -> None:
-        type = self._resolve_type(node.type) if node.type is not None else Unknown
+        if node.type:
+            type = self._resolve_type(node.type)
 
-        if type is None:
-            self._errors.append(CompilerError(f"Unknown type '{node.type}'", node))
-            return
+            if type is None:
+                self._errors.append(CompilerError(f"Unknown type '{node.type}'", node))
+                return
+        else:
+            type = None
 
         self._set_codegen_context()
         snippet = self._codegen.generate_variable_decl(

@@ -1,4 +1,5 @@
 from typing import Optional
+from codex.lang.types import Type
 
 
 class StandardModule:
@@ -24,18 +25,22 @@ class StandardModule:
     include this module in their code using the `using` directive.
     """
 
+    module_types: list[Type]
+
     def __init__(
         self,
         name: str,
         *args,
         description: str,
         keywords: list[str] = [],
-        include_by_default: bool = False
+        include_by_default: bool = False,
+        module_types: list[Type] = [],
     ) -> None:
         self.name = name
         self.description = description
         self.keywords = keywords
         self.include_by_default = include_by_default
+        self.module_types = module_types
 
     def __hash__(self) -> int:
         """
@@ -43,6 +48,11 @@ class StandardModule:
         """
 
         return hash(self.name)
+
+
+class StdLibTypes:
+    Matrix = Type("matrix")
+    Array = Type("array")
 
 
 class StandardLibrary:
@@ -55,6 +65,7 @@ class StandardLibrary:
         description="Provides a generic array type.",
         keywords=["array", "vector", "list"],
         include_by_default=True,
+        module_types=[StdLibTypes.Array],
     )
 
     Math = StandardModule(
@@ -85,7 +96,9 @@ class StandardLibrary:
         "linalg",
         description="Provides functions for linear algebra and matrix operations.",
         keywords=["matrix", "2d array", "nd array"],
+        module_types=[StdLibTypes.Matrix],
     )
+
 
 def get_standard_module(name: str) -> Optional[StandardModule]:
     """
