@@ -2,16 +2,22 @@ import argparse
 from sys import stderr
 from pathlib import Path
 from typing import Optional
+from codex.compiler.config import CompilerConfig, CompilerConfigError, validate_config
 from codex.parser import parse
 from codex.parser.errors import CodexSyntaxError
 from codex.parser.source import CodexSource
-from codex.compiler import CompilerConfig, CompilerConfigError, Compiler
-from codex.compiler.languages import get_all_languages
+from codex.compiler import Compiler
+from codex.compiler.targets import LANGUAGE_REGISTRY
 from codex.cli.formatting import (
+    MODE_ERROR,
+    MODE_WARNING,
+    format_compileerror,
     format_compilerconfigerror,
     format_syntaxerror,
     format_language_list,
     format_simple_error,
+    red,
+    yellow,
 )
 from dotenv import dotenv_values
 
@@ -72,7 +78,7 @@ def args_as_compiler_config(args: argparse.Namespace) -> CompilerConfig:
         output_path = Path(args.filename).name.split(".")[0]
 
     return CompilerConfig(
-        language_name=args.target,
+        target_language_name=args.target,
         output_path=output_path,
         openai_key=openai_key,
     )
@@ -96,7 +102,7 @@ def run_cli() -> None:
 
     if args.list_languages:
         print()
-        print(format_language_list(get_all_languages()))
+        print(format_language_list(LANGUAGE_REGISTRY))
         print()
         return
 
@@ -106,11 +112,43 @@ def run_cli() -> None:
 
     try:
         config = args_as_compiler_config(args)
+        validate_config(config)
+
         source = CodexSource.from_file(args.filename)
         module = parse(source)
 
         compiler = Compiler(module, config)
         compiler.compile()
+
+        output_path = config.output_path
+
+        # ensure that the output path has a file extension, if not, add one based on the target language
+        if not Path(output_path).suffix:
+            output_path += "." + compiler.target.info.source_file_extension
+
+        with open(output_path, "w") as f:
+            f.write(compiler.get_output())
+
+        for error in compiler.get_errors():
+            stderr_print(format_compileerror(error, MODE_ERROR))
+            stderr_print()
+
+        for warning in compiler.get_warnings():
+            stderr_print(format_compileerror(warning, MODE_WARNING))
+            stderr_print()
+
+        num_errs = len(compiler.get_errors())
+        emsg = red(str(num_errs) + " error" + ("s" if num_errs > 1 else ""))
+        num_warns = len(compiler.get_warnings())
+        wmsg = yellow(str(num_warns) + " warning" + ("s" if num_warns > 1 else ""))
+
+        if num_errs > 0 and num_warns == 0:
+            stderr_print(f"Compilation failed with {emsg}.")
+        elif num_errs == 0 and num_warns > 0:
+            stderr_print(f"Compilation succeeded with {wmsg}.")
+        elif num_errs > 0 and num_warns > 0:
+            stderr_print(f"Compilation failed with {emsg} and {wmsg}.")
+
     except CompilerConfigError as e:
         stderr_print(format_compilerconfigerror(e))
     except CodexSyntaxError as e:

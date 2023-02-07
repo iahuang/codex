@@ -8,6 +8,13 @@ from typing import Optional
 from dataclasses import dataclass, field
 
 
+def but_got(remaining: str) -> str:
+    if len(remaining) == 0:
+        return "EOF"
+
+    return f"{remaining[0]!r}"
+
+
 class ExpressionMatchError(Exception):
     string: str
     """
@@ -29,7 +36,7 @@ class MatchResult:
 
     def get_match_length(self) -> int:
         return len(self.matched_string)
-    
+
     def has_named_group(self, name: str) -> bool:
         return name in self.named_groups
 
@@ -99,11 +106,11 @@ class Literal(Expression):
                 return MatchResult(self.literal)
         else:
             if string.lower().startswith(self.literal.lower()):
-                return MatchResult(string[:len(self.literal) + 1])
+                return MatchResult(string[: len(self.literal) + 1])
 
         if throw_on_failure:
             raise ExpressionMatchError(
-                string, f"Expected {self.human_representation()}, but got {repr(string)}"
+                string, f"Expected {self.human_representation()}, but got {but_got(string)}"
             )
 
         return None
@@ -129,7 +136,7 @@ class Regex(Expression):
 
         if throw_on_failure:
             raise ExpressionMatchError(
-                string, f"Expected {self.human_representation()}, but got {repr(string)}"
+                string, f"Expected {self.human_representation()}, but got {but_got(string)}"
             )
 
         return None
@@ -198,8 +205,8 @@ class CompoundExpression(Expression):
                 string, throw_on_failure=throw_on_failure and not component.optional
             )
 
-            #if not component.optional: print(match, component.expression.human_representation(), "for", self.human_representation(), repr(result.matched_string))
-            
+            # if not component.optional: print(match, component.expression.human_representation(), "for", self.human_representation(), repr(result.matched_string))
+
             if match:
                 result.matched_string += match.matched_string
 
@@ -215,7 +222,7 @@ class CompoundExpression(Expression):
                 if throw_on_failure:
                     raise ExpressionMatchError(
                         string,
-                        f"Expected {component.expression.human_representation()}, but got {repr(string)}",
+                        f"Expected {component.expression.human_representation()}, but got {but_got(string)}",
                     )
 
                 result = None
@@ -246,7 +253,7 @@ class UnionExpression(Expression):
 
         if throw_on_failure:
             raise ExpressionMatchError(
-                string, f"Expected {self.human_representation()}, but got {repr(string)}"
+                string, f"Expected {self.human_representation()}, but got {but_got(string)}"
             )
 
         return None

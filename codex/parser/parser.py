@@ -1,34 +1,29 @@
 from typing import NoReturn, Optional
+from dataclasses import dataclass
 
 from codex.parser.errors import CodexSyntaxError
-from codex.parser.grammars import ActionStatement
+from codex.parser.syntax import (
+    ActionStatement,
+    UsingDirective,
+    VariableDeclaration,
+    extract_prompt,
+    extract_module_name,
+    GROUP_PROMPT,
+)
 from codex.parser.source import CodexSource
-from codex.parser.ast import Module, ASTNode, ActionStatementNode
-from codex.parser.grammar_parser import MatchResult, identify_string, ExpressionMatchError
+from codex.parser.ast import (
+    Location,
+    Module,
+    ASTNode,
+    ActionStatementNode,
+    UsingDirectiveNode,
+    VariableDeclarationNode,
+)
+from codex.parser.grammar import identify_string, ExpressionMatchError
 
 
 # Measured in spaces OR tabs
 IndentationLevel = int
-
-
-def get_parameter_symbols(parameter_match: MatchResult) -> list[str]:
-    """
-    Extract the symbol names from the given parameter match.
-    """
-
-    last_symbol_name = (
-        parameter_match.get_named_group("last_parameter")
-        .get_named_group("symbol_name")
-        .matched_string
-    )
-
-    non_last_symbol_names: list[str] = []
-
-    if non_last := parameter_match.get_named_group_optional("non_last_parameters"):
-        for param in non_last.indexed_groups:
-            non_last_symbol_names.append(param.get_named_group("symbol_name").matched_string)
-
-    return non_last_symbol_names + [last_symbol_name]
 
 
 def is_blank_string(s: str) -> bool:
@@ -86,6 +81,9 @@ class Parser:
 
         return self.get_current_line()
 
+    def _get_current_source_location(self) -> Location:
+        return Location(self.source, self.get_current_line_number())
+
     def parse_current_line(
         self, enclosing_indentation_level: IndentationLevel
     ) -> Optional[tuple[ASTNode, IndentationLevel]]:
@@ -121,32 +119,42 @@ class Parser:
 
         # identify the statement type, raising an error if it could not be identified
 
-        identified_expr = identify_string(trimmed_line, [ActionStatement])
+        identified_expr = identify_string(
+            trimmed_line, [ActionStatement, VariableDeclaration, UsingDirective]
+        )
 
         if identified_expr is None:
-            self.raise_syntax_error_at_current_line(f"Unrecognized character {trimmed_line[0]}")
+            self.raise_syntax_error_at_current_line(
+                f"Unrecognized token {trimmed_line.split(' ')[0]!r}"
+            )
 
         # parse the statement
+
+        location = self._get_current_source_location()
 
         try:
             match = identified_expr.match(trimmed_line, throw_on_failure=True)
             assert match is not None
 
             if identified_expr == ActionStatement:
-                statement_match = match.get_named_group("generative_statement")
-
-                statement_text = statement_match.get_named_group("statement_text").matched_string
-
-                # check if the action statement provided parameters
-
-                parameter_symbols: list[str] = []
-
-                if parameter_match := statement_match.get_named_group_optional("parameters"):
-                    parameter_symbols = get_parameter_symbols(parameter_match)
-
-                node = ActionStatementNode(statement_text, parameter_symbols)
+                prompt = extract_prompt(match.get_named_group(GROUP_PROMPT))
+                node = ActionStatementNode(location, prompt)
 
                 return node, indentation
+
+            if identified_expr == VariableDeclaration:
+                variable_name = match.get_named_group("variable_name").matched_string
+                type_name = match.get_named_group("type_name").matched_string
+                prompt = extract_prompt(match.get_named_group(GROUP_PROMPT))
+
+                node = VariableDeclarationNode(location, variable_name, type_name, prompt)
+
+                return node, indentation
+
+            if identified_expr == UsingDirective:
+                module_name = extract_module_name(match)
+
+                return UsingDirectiveNode(location, module_name), indentation
 
         except ExpressionMatchError as e:
             self.raise_syntax_error_at_current_line(e.message)
@@ -162,14 +170,14 @@ class Parser:
         be called once.
         """
 
-        module = Module()
+        module = Module(self._get_current_source_location())
 
         while not self.at_end():
             parse_result = self.parse_current_line(0)
 
             if parse_result is not None:
                 module.children.append(parse_result[0])
-            
+
             self.next_line()
 
         return module

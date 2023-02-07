@@ -1,8 +1,10 @@
 from colorama import Fore, Style
-from codex.compiler import CompilerConfigError
+from codex.compiler.compiler import CompilerError
+from codex.compiler.config import CompilerConfigError
+from codex.compiler.language_binding import LanguageBinding
 from codex.parser.errors import CodexSyntaxError
+from codex.parser.source import CodexSource
 from codex.util.strings import StringBuilder
-from codex.compiler.languages import get_language_context
 
 
 def red(text: str) -> str:
@@ -61,6 +63,10 @@ def format_simple_error(error: str) -> str:
     return f"{red('error:')} {error}"
 
 
+def _get_source_preview(source: CodexSource, line_no: int) -> str:
+    return f"{dim(str(line_no)+ '| '+source.get_line_by_number(line_no))}"
+
+
 def format_syntaxerror(error: CodexSyntaxError) -> str:
     """
     Format the given CodexSyntaxError as a colored string.
@@ -70,14 +76,41 @@ def format_syntaxerror(error: CodexSyntaxError) -> str:
     s.writeln(f"at {blue(error.source.get_name())}, line {error.line_no}")
 
     # preview the line where the error occurred
-    s.writeln(f"{dim(str(error.line_no)+ '| '+error.source.get_line_by_number(error.line_no))}")
+    s.writeln(_get_source_preview(error.source, error.line_no))
+    s.writeln()
 
     s.writeln(f"{red('syntax error:')} {error.message}")
 
-    return s.get_data()
+    return s.to_string(trim_trailing_whitespace=True)
 
 
-def format_language_list(languages: list[str]) -> str:
+MODE_ERROR = 0
+MODE_WARNING = 1
+
+
+def format_compileerror(error: CompilerError, mode: int) -> str:
+    """
+    Format the given error as a colored string.
+    """
+
+    source = error.offending_node.location.source
+    line_no = error.offending_node.location.line_no
+
+    s = StringBuilder()
+    s.writeln(f"at {blue(source.get_name())}, line {line_no}")
+
+    # preview the line where the error occurred
+    s.writeln(_get_source_preview(source, line_no))
+
+    if mode == MODE_ERROR:
+        s.writeln(f"{red('error:')} {error.message}")
+    elif mode == MODE_WARNING:
+        s.writeln(f"{yellow('warning:')} {error.message}")
+
+    return s.to_string(trim_trailing_whitespace=True)
+
+
+def format_language_list(languages: list[LanguageBinding]) -> str:
     """
     Format the given list of language names as a colored string.
     """
@@ -85,8 +118,9 @@ def format_language_list(languages: list[str]) -> str:
     s = StringBuilder()
     s.writeln(f"{Style.BRIGHT}Supported languages:{Style.RESET_ALL}")
 
-    for language in languages:
-        lang = get_language_context(language)
-        s.writeln(f"  {blue(language)} - {lang.language_display_name}")
+    for lang in languages:
+        s.writeln(f"  {blue(lang.name)} - {lang.info.display_name}")
+        s.writeln(f"    {dim(lang.info.description)}")
+        s.writeln()
 
-    return s.get_data()
+    return s.to_string(trim_trailing_whitespace=True)

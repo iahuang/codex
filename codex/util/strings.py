@@ -10,11 +10,14 @@ class StringBuilder:
     def writeln(self, data="") -> None:
         self.write(data + "\n")
 
-    def get_data(self, trim_trailing_whitespace=True) -> str:
+    def to_string(self, trim_trailing_whitespace=False) -> str:
         if trim_trailing_whitespace:
             return self._data.rstrip()
         else:
             return self._data
+
+    def clear(self) -> None:
+        self._data = ""
 
 
 def indented(code: str, indentation_spaces: int = 4) -> str:

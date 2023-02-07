@@ -40,14 +40,6 @@ class Type:
         if base_type == TYPE_USER_DEFINED and user_defined_name == "":
             raise Exception("User defined type must have a name")
 
-        if (
-            base_type.num_generic_args != UKNOWN_NUM_GENERIC
-            and len(generic_parameters) != base_type.num_generic_args
-        ):
-            raise Exception(
-                f"Type {base_type.name} expects {base_type.num_generic_args} generic parameters, got {len(generic_parameters)}"
-            )
-
     def get_type_name(self) -> str:
         base = self.base_type.name
 
@@ -82,3 +74,27 @@ String = Type(TYPE_STRING)
 Array = lambda type: Type(TYPE_ARRAY, generic_parameters=[type])
 Map = lambda key_type, value_type: Type(TYPE_MAP, generic_parameters=[key_type, value_type])
 UserDefined = lambda name: Type(TYPE_USER_DEFINED, user_defined_name=name)
+
+def construct_generic(base: TypeBase, generic_parameters: list[Type]) -> Type:
+    """
+    Construct a generic type from a base type and a list of generic parameters.
+    
+    If there are insufficient generic parameters, the remaining parameters are filled with `Unknown`.
+
+    If the base type does not support generics, an exception is raised.
+    """
+
+    if base.num_generic_args == UKNOWN_NUM_GENERIC:
+        raise Exception(f"Base type {base.name} does not support generics")
+
+    if base.num_generic_args == 0:
+        raise Exception(f"Base type {base.name} does not support generics")
+
+    if len(generic_parameters) > base.num_generic_args:
+        raise Exception(f"Too many generic parameters for base type {base.name}")
+
+    if len(generic_parameters) < base.num_generic_args:
+        generic_parameters += [Unknown] * (base.num_generic_args - len(generic_parameters))
+
+    return Type(base, generic_parameters=generic_parameters)
+
