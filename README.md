@@ -21,7 +21,7 @@ Below is an example of Hello World in Codex:
 !: print hello world
 ```
 
-The `!:` syntax is analogous to a regular code comment whose content will correspond to AI-generated code.
+The `!:` syntax is analogous to a regular code comment whose content will correspond to AI-generated code. You can think of it as saying "do this!".
 
 For example, here is an example of a program that prints the first 10 Fibonacci numbers:
 
