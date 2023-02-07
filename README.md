@@ -26,15 +26,30 @@ The `!:` syntax is analogous to a regular code comment whose content will corres
 For example, here is an example of a program that prints the first 10 Fibonacci numbers:
 
 ```rust
-!: print the first 10 fibonacci numbers
+var array fibs: the first 10 fibonacci numbers
+
+!: print fibs
 ```
+
+We can also write the output to a file:
+
+```rust
+using fs
+
+var array fibs: the first 10 fibonacci numbers
+
+!: write fibs to fibs.txt as a comma-separated list
+```
+
+The `using` keyword is used to import Codex standard library modules. In this example, the `fs` provides filesystem access. The exact behavior of the `using` directive depends on the target language, but in general, it will import the corresponding standard library module.
+
+Even though the output of the Codex compiler is largely AI-generated, the `using` directive helps to ensure that the output is valid code.
 
 ## Getting Started
 
 1. In order to use Codex, you will need to [sign up for an OpenAI API key](https://platform.openai.com/account/api-keys). As of writing, the OpenAI code generation endpoint used by the compiler is free to use, but you still may need to provide a payment method to sign up for an API key. Once you have obtained an API key,
 2. Install dependencies using `pip install -r requirements.txt`.
 3. Run the Codex compiler using `python -m codex [input-file]`. Use `python -m codex --help` for more information.
-
 
 ## Installation
 
