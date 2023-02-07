@@ -31,7 +31,7 @@ var array fibs: the first 10 fibonacci numbers
 !: print fibs
 ```
 
-We can also write the output to a file:
+We can also have our program write the output to a file:
 
 ```rust
 using fs
